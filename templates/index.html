@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PromoTool V3 — Library</title>
+<link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">🎬 PromoStudio</div>
+  <div class="nav-links">
+    <a href="/" class="active">Library</a>
+    <a href="/make">Make Promo</a>
+    <a href="/history">History</a>
+  </div>
+  <div class="ai-badge">
+    <span class="ai-dot" id="ai-dot"></span>
+    <span id="ai-lbl">Checking…</span>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Hero -->
+  <div class="library-hero">
+    <div class="hero-text">
+      <div class="page-title">Episode Library</div>
+      <div class="hero-sub">Import shows · tag scenes · make promos in one click</div>
+    </div>
+    <button class="btn btn-primary btn-lg" onclick="scrollToImport()">+ Import Show</button>
+  </div>
+
+  <!-- Import Section -->
+  <div class="import-section" id="import-section">
+    <div class="import-section-title">
+      <span>📂</span> Import New Show
+    </div>
+    <div class="import-fields">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="lbl">Show Name</label>
+        <input class="inp" id="show-name" placeholder="e.g. Kanaa Kaanum Kaalangal" autocomplete="off">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="lbl">Folder Path <span style="font-weight:400;text-transform:none;font-size:10px;color:var(--dim)">— or drag a folder here</span></label>
+        <div class="path-input-wrap drop-zone" id="path-drop-zone">
+          <input class="inp" id="folder-path" placeholder="D:\Shows\KKK\Season1  — or drag folder here">
+          <span class="path-drop-hint">📁</span>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="flex-shrink:0;height:38px;margin-top:auto" onclick="importFolder()">
+        Scan &amp; Import
+      </button>
+    </div>
+    <div id="import-error" class="hidden" style="margin-top:10px;font-size:12px;color:var(--red);padding:8px 12px;background:var(--red-dim);border-radius:var(--r);border:1px solid rgba(255,77,109,.3)"></div>
+  </div>
+
+  <!-- Shows grid -->
+  <div class="shows-section-hdr">
+    <h2>Your Shows</h2>
+    <span class="shows-count" id="show-count"></span>
+  </div>
+  <div class="shows-grid" id="shows-grid">
+    <div class="loading">Loading…</div>
+  </div>
+
+  <!-- Episodes panel -->
+  <div id="ep-panel" class="ep-panel hidden" style="margin-top:8px">
+    <div class="ep-panel-hdr">
+      <div>
+        <div class="ep-panel-title" id="ep-panel-title"></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px" id="ep-panel-meta"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="analyzeAll()" id="analyze-all-btn">🤖 Analyze All</button>
+        <a class="btn btn-primary btn-sm" href="/make">🎬 Make Promo</a>
+        <button class="btn btn-icon btn-ghost" onclick="closePanel()" title="Close">✕</button>
+      </div>
+    </div>
+    <div class="ep-panel-body">
+      <div class="eps-grid" id="eps-grid"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Import progress modal -->
+<div class="modal-overlay hidden" id="import-modal">
+  <div class="modal-box">
+    <div class="modal-icon" id="import-icon">📂</div>
+    <div class="modal-title" id="import-title">Scanning folder…</div>
+    <div class="modal-sub" id="import-msg">Finding video files</div>
+    <div class="progress-bar thick" style="margin-bottom:8px">
+      <div class="progress-fill" id="import-prog" style="width:30%"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/main.js"></script>
+</body>
+</html>

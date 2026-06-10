@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>History — PromoStudio</title>
+<link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-brand"><a href="/">← PromoStudio</a></div>
+  <div class="nav-links">
+    <a href="/">Library</a>
+    <a href="/make">Make Promo</a>
+    <a href="/history" class="active">History</a>
+  </div>
+</nav>
+<div class="page">
+  <div class="history-hdr">
+    <h2>Export History</h2>
+    <span class="badge badge-dim" id="h-count"></span>
+  </div>
+  <div class="history-grid" id="history-grid">
+    <div class="loading">Loading…</div>
+  </div>
+</div>
+<script>
+const STATUS_COLORS = { done:'badge-green', error:'badge-red', building:'badge-amber', draft:'badge-dim' };
+function fmtDur(s){ if(!s)return'--'; const m=Math.floor(s/60),sec=Math.round(s%60); return m?`${m}m ${sec}s`:`${sec}s`; }
+function fmtDate(d){ return d?d.slice(0,10):''; }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+async function load(){
+  const res = await fetch('/api/promos');
+  const p   = await res.json();
+  const g   = document.getElementById('history-grid');
+  document.getElementById('h-count').textContent = p.length + ' promos';
+  if(!p.length){
+    g.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No promos yet</div><div class="empty-sub">Go to <a href="/make" style="color:var(--accent)">Make Promo</a> to get started.</div></div>`;
+    return;
+  }
+  g.innerHTML = p.map(x => `
+    <div class="history-item">
+      <div class="hi-treatment">${esc(x.treatment_type)}</div>
+      <div class="hi-body">
+        <div class="hi-title">${esc(x.title||'Untitled Promo')}</div>
+        <div class="hi-meta">${esc(x.show_name||'')} · ${fmtDur(x.final_duration)} · ${fmtDate(x.created_at)}</div>
+        ${x.output_path?`<div class="hi-path">${esc(x.output_path)}</div>`:''}
+      </div>
+      <span class="badge ${STATUS_COLORS[x.status]||'badge-dim'}">${esc(x.status)}</span>
+    </div>`).join('');
+}
+load();
+</script>
+</body>
+</html>

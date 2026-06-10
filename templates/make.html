@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Make Promo — PromoStudio</title>
+<link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand"><a href="/">← PromoStudio</a></div>
+  <div class="nav-links">
+    <a href="/">Library</a>
+    <a href="/make" class="active">Make Promo</a>
+    <a href="/history">History</a>
+  </div>
+  <div class="ai-badge">
+    <span class="ai-dot" id="ai-dot"></span>
+    <span id="ai-lbl">AI</span>
+  </div>
+</nav>
+
+<div class="make-layout">
+
+  <!-- ════ SIDEBAR ════ -->
+  <div class="make-sidebar">
+
+    <!-- Step progress -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Progress</div>
+      <div class="step-indicator">
+        <div class="step-dot active" id="s1">1</div>
+        <div class="step-line"></div>
+        <div class="step-dot" id="s2">2</div>
+        <div class="step-line"></div>
+        <div class="step-dot" id="s3">3</div>
+        <div class="step-line"></div>
+        <div class="step-dot" id="s4">4</div>
+      </div>
+      <div class="step-label" id="step-label">Select treatment &amp; episodes</div>
+    </div>
+
+    <!-- Treatment type -->
+    <div class="sidebar-section" id="step1-panel">
+      <div class="sidebar-section-title">Treatment Type</div>
+      <div class="treatment-grid" id="treatment-grid"></div>
+    </div>
+
+    <!-- Show + multi-episode picker -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Episodes</div>
+
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="lbl">Show</label>
+        <select class="inp" id="sel-show" onchange="onShowChange()">
+          <option value="">Select show…</option>
+        </select>
+      </div>
+
+      <div id="ep-picker-group">
+        <label class="lbl" style="margin-bottom:6px">Episodes <span style="font-weight:400;font-size:10px;text-transform:none;color:var(--dim)">(select one or more)</span></label>
+
+        <!-- Custom multi-select picker -->
+        <div class="ep-picker-wrap" id="ep-picker-wrap">
+          <div class="ep-picker-trigger" id="ep-picker-trigger" onclick="toggleEpPicker()">
+            <span id="ep-picker-label" style="color:var(--dim)">Select episodes…</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="ep-picker-selected-count hidden" id="ep-sel-count"></span>
+              <span class="ep-picker-arrow">▾</span>
+            </div>
+          </div>
+          <div class="ep-picker-dropdown hidden" id="ep-picker-dropdown">
+            <div class="ep-picker-search">
+              <input type="text" placeholder="Search episodes…" id="ep-picker-search" oninput="filterEpPicker(this.value)" autocomplete="off">
+            </div>
+            <div id="ep-picker-list"></div>
+          </div>
+        </div>
+
+        <!-- Selected episode tags -->
+        <div class="ep-selected-tags" id="ep-selected-tags"></div>
+      </div>
+    </div>
+
+    <!-- Treatment-specific inputs -->
+    <div class="sidebar-section" id="inputs-panel">
+      <div class="sidebar-section-title">Inputs</div>
+      <div id="dynamic-inputs"></div>
+
+      <div class="form-group">
+        <label class="lbl">Target Duration</label>
+        <div class="dur-row">
+          <input type="range" id="dur-slider" min="10" max="2400" value="30" oninput="updateDur()">
+          <span class="dur-val" id="dur-val">30s</span>
+        </div>
+        <div class="dur-presets">
+          <span class="dur-preset" onclick="setDur(15)">15s</span>
+          <span class="dur-preset active" onclick="setDur(30)">30s</span>
+          <span class="dur-preset" onclick="setDur(60)">1m</span>
+          <span class="dur-preset" onclick="setDur(120)">2m</span>
+          <span class="dur-preset" onclick="setDur(300)">5m</span>
+          <span class="dur-preset" onclick="setDur(1800)">30m</span>
+          <span class="dur-preset" onclick="setDur(2400)">40m</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full btn-lg" onclick="generatePlan()" id="gen-btn">
+        🤖 Generate Plan →
+      </button>
+    </div>
+
+  </div><!-- /sidebar -->
+
+  <!-- ════ MAIN PANEL ════ -->
+  <div class="make-main" id="make-main">
+
+    <!-- Empty state -->
+    <div id="empty-state" class="make-empty">
+      <div class="make-empty-icon">🎬</div>
+      <div class="make-empty-title">Ready to make a promo?</div>
+      <div class="make-empty-sub">Pick a treatment, select one or more episodes on the left, then hit Generate Plan.</div>
+    </div>
+
+    <!-- Loading state -->
+    <div id="loading-state" class="hidden" style="padding:80px 40px;text-align:center">
+      <div style="font-size:40px;margin-bottom:16px"><span class="spin">⚙️</span></div>
+      <div style="font-size:17px;font-weight:600;margin-bottom:8px">Building your plan…</div>
+      <div class="muted" id="loading-msg">Selecting best clips from selected episodes</div>
+    </div>
+
+    <!-- Plan review (Step 3) -->
+    <div id="plan-state" class="hidden">
+
+      <div class="plan-card">
+        <div class="plan-card-hdr">
+          <div>
+            <div class="plan-card-title" id="plan-title">Promo Plan</div>
+            <div class="plan-card-sub" id="plan-treatment-lbl"></div>
+          </div>
+          <div class="plan-card-actions">
+            <span class="badge badge-blue" id="plan-dur-badge"></span>
+            <button class="btn btn-ghost btn-sm" onclick="regeneratePlan()">↺ Regenerate</button>
+          </div>
+        </div>
+
+        <div class="plan-sub-label">Selected Clips</div>
+        <div class="plan-clips" id="plan-clips"></div>
+
+        <div id="plan-overlays-section" class="plan-sub-section hidden">
+          <div class="plan-sub-label">Text Overlays</div>
+          <div id="plan-overlays"></div>
+        </div>
+
+        <div id="sfx-section" class="plan-sub-section hidden">
+          <div class="plan-sub-label">
+            SFX Timeline <span class="badge badge-dim" id="sfx-count"></span>
+          </div>
+          <div class="sfx-chips" id="sfx-list"></div>
+        </div>
+      </div>
+
+      <!-- Asset approval -->
+      <div class="approval-card">
+        <div class="approval-title">Assets</div>
+        <div class="approval-sub">Review each asset. Choose local file or download fresh.</div>
+
+        <label class="lbl" style="margin-bottom:8px">Background Music</label>
+        <div class="asset-item">
+          <span class="asset-icon">🎵</span>
+          <div class="asset-info">
+            <div class="asset-nm" id="bgm-name">—</div>
+            <div class="asset-src" id="bgm-src"></div>
+          </div>
+          <select class="inp inp-sm" id="bgm-choice" style="width:auto;min-width:140px">
+            <option value="local">Use local file</option>
+            <option value="download">Download fresh</option>
+          </select>
+        </div>
+        <div class="local-music-alts" id="local-music-alts"></div>
+
+        <label class="lbl" style="margin:12px 0 8px">SFX Pack</label>
+        <div id="sfx-asset-list"></div>
+
+        <div id="font-section">
+          <label class="lbl" style="margin:12px 0 8px">Font</label>
+          <div class="asset-item">
+            <span class="asset-icon">🔤</span>
+            <div class="asset-info">
+              <div class="asset-nm" id="font-name">—</div>
+              <div class="asset-src" id="font-src"></div>
+            </div>
+            <select class="inp inp-sm" id="font-choice" style="width:auto;min-width:140px">
+              <option value="local">Use local file</option>
+              <option value="download">Download fresh</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="approve-bar">
+        <button class="btn btn-ghost" onclick="backToInputs()">← Back</button>
+        <button class="btn btn-primary btn-lg" style="flex:1;justify-content:center" onclick="approvePlan()">
+          ✅ Approve &amp; Build Promo
+        </button>
+      </div>
+    </div>
+
+    <!-- Build state (Step 4) -->
+    <div id="build-state" class="hidden">
+      <div class="build-card">
+        <div class="build-title">Building Promo…</div>
+        <div class="progress-bar thick" style="margin-bottom:10px">
+          <div class="progress-fill" id="build-prog" style="width:0%"></div>
+        </div>
+        <div class="muted mono" id="build-msg" style="margin-bottom:10px;font-size:12px">Starting…</div>
+        <div class="build-log" id="build-log"></div>
+      </div>
+    </div>
+
+    <!-- Done state -->
+    <div id="done-state" class="hidden">
+      <div class="done-card">
+        <div class="done-icon">✅</div>
+        <div class="done-title">Promo Ready!</div>
+        <div class="done-path" id="done-path"></div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-success btn-lg" onclick="makeAnother()">🎬 Make Another</button>
+          <a href="/history" class="btn btn-ghost btn-lg">📋 View History</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /make-main -->
+</div>
+
+<script src="/static/js/make.js"></script>
+</body>
+</html>
